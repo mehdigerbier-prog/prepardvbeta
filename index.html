@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prépa RDV</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+
+:root {
+  --bg: #f2f2f7;
+  --white: #ffffff;
+  --ink: #1c1c1e;
+  --label: #3c3c43;
+  --muted: rgba(60,60,67,.6);
+  --sep: rgba(60,60,67,.12);
+  --blue: #007aff;
+  --green: #34c759;
+  --red: #ff3b30;
+  --orange: #ff9500;
+  --indigo: #5856d6;
+  --teal: #5ac8fa;
+  --card: #ffffff;
+  --card2: #f2f2f7;
+  --r: 13px;
+  --r2: 10px;
+  --shadow: 0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.04);
+}
+
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#000;--white:#1c1c1e;--ink:#fff;--label:rgba(255,255,255,.85);
+    --muted:rgba(235,235,245,.6);--sep:rgba(84,84,88,.65);
+    --card:#1c1c1e;--card2:#2c2c2e;
+    --shadow:0 1px 3px rgba(0,0,0,.4),0 4px 16px rgba(0,0,0,.3);
+  }
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+
+body {
+  font-family: -apple-system, 'Inter', BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+/* ── NAV ── */
+.nav {
+  background: rgba(242,242,247,.85);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: .5px solid var(--sep);
+  padding: 0 20px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+
+.nav-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.client-chip {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--blue);
+  cursor: pointer;
+  padding: 3px 10px;
+  background: rgba(0,122,255,.1);
+  border-radius: 20px;
+}
+
+.nav-actions { display: flex; gap: 8px; align-items: center; }
+
+.nav-btn {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+
+.nav-btn:active { opacity: .7; }
+.nav-btn-blue { background: var(--blue); color: #fff; }
+.nav-btn-ghost { background: rgba(0,122,255,.1); color: var(--blue); }
+.nav-btn-red { background: rgba(255,59,48,.1); color: var(--red); }
+
+/* ── PAGE ── */
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 28px 16px 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* ── SECTION LABEL ── */
+.section-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  color: var(--muted);
+  padding: 0 4px;
+  margin-bottom: 8px;
+}
+
+/* ── GROUPED LIST (iOS style) ── */
+.group {
+  background: var(--card);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.group-row {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  min-height: 50px;
+  border-bottom: .5px solid var(--sep);
+  gap: 12px;
+}
+
+.group-row:last-child { border-bottom: none; }
+
+.group-row-label {
+  font-size: 15px;
+  color: var(--ink);
+  flex: 1;
+}
+
+.group-row-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 1px;
+}
+
+.group-row-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ── iOS TOGGLE SWITCH ── */
+.toggle-wrap { display: flex; align-items: center; }
+
+.ios-toggle {
+  position: relative;
+  width: 51px;
+  height: 31px;
+  flex-shrink: 0;
+}
+
+.ios-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.ios-track {
+  position: absolute;
+  inset: 0;
+  border-radius: 31px;
+  background: var(--sep);
+  transition: background .25s;
+  cursor: pointer;
+}
+
+.ios-toggle input:checked + .ios-track { background: var(--green); }
+
+.ios-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,.25);
+  transition: transform .25s cubic-bezier(.4,0,.2,1);
+  pointer-events: none;
+}
+
+.ios-toggle input:checked ~ .ios-thumb { transform: translateX(20px); }
+
+/* ── INPUT INLINE ── */
+.inline-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--ink);
+  text-align: right;
+  width: 100%;
+  max-width: 240px;
+}
+
+.inline-input::placeholder { color: var(--muted); }
+.inline-input.mono { font-variant-numeric: tabular-nums; font-size: 15px; font-weight: 500; }
+
+input[type=date].inline-input { max-width: 160px; }
+
+/* ── SEGMENT CONTROL ── */
+.segment {
+  display: inline-flex;
+  background: rgba(118,118,128,.12);
+  border-radius: 9px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.seg-opt {
+  padding: 5px 14px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .18s;
+  color: var(--muted);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.seg-opt.active {
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 0 1px 3px rgba(0,0,0,.14);
+}
+
+/* ── FINANCEUR SEGMENT ── */
+.fin-segment {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.fin-btn {
+  padding: 7px 14px;
+  border-radius: 20px;
+  background: rgba(118,118,128,.1);
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .18s;
+}
+
+.fin-btn.active {
+  background: var(--blue);
+  color: #fff;
+}
+
+/* ── AMOUNTS GRID ── */
+.amounts-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--sep);
+  border-radius: var(--r);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.amt-cell {
+  background: var(--card);
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.amt-cell label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--muted);
+}
+
+.amt-cell input {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ink);
+  width: 100%;
+  padding: 0;
+}
+
+.amt-cell input::placeholder { color: var(--sep); font-weight: 400; font-size: 20px; }
+
+/* ── REGIME DISPLAY ── */
+.regime-banner {
+  border-radius: var(--r);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow: var(--shadow);
+}
+
+.regime-banner.ls2 { background: linear-gradient(135deg, #fff1f1 0%, #ffe4e4 100%); }
+.regime-banner.lcc { background: linear-gradient(135deg, #f0f7ff 0%, #ddeeff 100%); }
+
+.regime-big {
+  font-size: 48px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  line-height: 1;
+}
+
+.regime-banner.ls2 .regime-big { color: var(--red); }
+.regime-banner.lcc .regime-big { color: var(--blue); }
+
+.regime-details { flex: 1; }
+
+.regime-pct {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.regime-banner.ls2 .regime-pct { color: var(--red); }
+.regime-banner.lcc .regime-pct { color: var(--blue); }
+
+.regime-meta { font-size: 13px; color: var(--muted); }
+
+.regime-bar {
+  height: 6px;
+  background: rgba(0,0,0,.08);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.regime-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width .5s cubic-bezier(.4,0,.2,1);
+}
+
+.regime-banner.ls2 .regime-bar-fill { background: var(--red); }
+.regime-banner.lcc .regime-bar-fill { background: var(--blue); }
+
+.regime-note {
+  background: rgba(255,255,255,.6);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-top: 12px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--label);
+}
+
+/* ── IMAGES ── */
+.img-drop {
+  border: 1.5px dashed var(--blue);
+  border-radius: var(--r);
+  padding: 28px;
+  text-align: center;
+  cursor: pointer;
+  transition: background .15s;
+  color: var(--blue);
+  font-size: 14px;
+  font-weight: 500;
+  background: rgba(0,122,255,.03);
+}
+
+.img-drop:hover { background: rgba(0,122,255,.07); }
+
+.img-drop .drop-icon { font-size: 30px; display: block; margin-bottom: 6px; }
+
+.img-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.img-thumb {
+  position: relative;
+  border-radius: var(--r2);
+  overflow: hidden;
+  aspect-ratio: 4/3;
+  background: var(--sep);
+  box-shadow: var(--shadow);
+}
+
+.img-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.img-thumb .del {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(4px);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity .15s;
+  line-height: 1;
+}
+
+.img-thumb:hover .del { opacity: 1; }
+
+/* ── DOCS CHIPS ── */
+.doc-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+
+.doc-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px 6px 8px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .15s;
+  user-select: none;
+  border: 1px solid var(--sep);
+  background: var(--card);
+  color: var(--muted);
+}
+
+.doc-chip .chip-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--sep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  flex-shrink: 0;
+  transition: all .15s;
+}
+
+.doc-chip.got {
+  background: rgba(52,199,89,.12);
+  border-color: rgba(52,199,89,.35);
+  color: #1a7f37;
+}
+
+.doc-chip.got .chip-icon {
+  background: var(--green);
+  color: white;
+}
+
+.doc-chip .xbtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 13px;
+  padding: 0;
+  margin-left: 2px;
+  opacity: .5;
+  line-height: 1;
+}
+
+.doc-chip .xbtn:hover { opacity: 1; }
+
+.doc-add-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.doc-add-row input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid var(--sep);
+  border-radius: 10px;
+  background: var(--card);
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  outline: none;
+}
+
+.doc-add-row input:focus { border-color: var(--blue); }
+
+.add-btn {
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: var(--blue);
+  color: white;
+  border: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* ── PROP IMAGE CARDS ── */
+.prop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.prop-card {
+  background: var(--card);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform .12s, box-shadow .12s;
+}
+
+.prop-card:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(0,0,0,.1); }
+.prop-card:active { transform: scale(.99); }
+
+.prop-card-head {
+  padding: 10px 14px;
+  background: var(--card2);
+  border-bottom: .5px solid var(--sep);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.del-prop {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--red);
+  font-size: 16px;
+  padding: 0;
+  opacity: 0;
+  transition: opacity .15s;
+  line-height: 1;
+}
+
+.prop-card:hover .del-prop { opacity: 1; }
+
+.prop-drop {
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--blue);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 16px 24px;
+  text-align: center;
+  transition: background .15s;
+}
+
+.prop-drop:hover { background: rgba(0,122,255,.04); }
+.prop-drop .drop-icon { font-size: 30px; opacity: .8; }
+
+.prop-preview { display: none; width: 100%; }
+.prop-preview img {
+  width: 100%;
+  display: block;
+  object-fit: contain;
+  max-height: 360px;
+  background: #f8f8f8;
+}
+
+.prop-add-more {
+  padding: 10px 14px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--blue);
+  cursor: pointer;
+  border-top: .5px solid var(--sep);
+  transition: background .12s;
+}
+.prop-add-more:hover { background: rgba(0,122,255,.05); }
+.drag-over { outline: 2px dashed var(--blue) !important; background: rgba(0,122,255,.04); }
+.prop-focused { outline: 2px solid var(--blue); }
+
+.paste-zone {
+  display: block;
+  width: 100%;
+  border: none;
+  border-top: 2px solid rgba(0,122,255,.3);
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: -apple-system, 'Inter', sans-serif;
+  color: #007aff;
+  outline: none;
+  cursor: text;
+  background: rgba(0,122,255,.08);
+  resize: none;
+  height: 44px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.paste-zone::placeholder { color: #007aff; opacity: 1; }
+.paste-zone:focus {
+  background: rgba(0,122,255,.15);
+  border-top-color: rgba(0,122,255,.7);
+}
+@media(prefers-color-scheme:dark){
+  .paste-zone { background: rgba(0,122,255,.2); color: #4da6ff; border-top-color: rgba(0,122,255,.4); }
+  .paste-zone::placeholder { color: #4da6ff; }
+  .paste-zone:focus { background: rgba(0,122,255,.3); }
+}
+
+@media(max-width:600px) {
+  .amounts-group { grid-template-columns: 1fr; }
+  .prop-grid { grid-template-columns: 1fr; }
+  .fin-segment { gap: 4px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-title">
+    Prépa RDV
+    <span class="client-chip" id="top-client" onclick="document.getElementById('nom_client').focus()">— Client —</span>
+  </div>
+  <div class="nav-actions">
+    <button class="nav-btn nav-btn-red" onclick="resetAll()">Effacer</button>
+    <button class="nav-btn nav-btn-blue" onclick="doPrint()">↓ PDF</button>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- ① CLIENT -->
+  <div>
+    <div class="section-label">Client</div>
+    <div class="group">
+      <div class="group-row">
+        <span class="group-row-label">Nom</span>
+        <div class="group-row-right">
+          <input class="inline-input" type="text" id="nom_client" placeholder="Dupont Jean" oninput="updateBadge()">
+        </div>
+      </div>
+      <div class="group-row">
+        <span class="group-row-label">Date du RDV</span>
+        <div class="group-row-right">
+          <input class="inline-input" type="date" id="date_rdv">
+        </div>
+      </div>
+      <div class="group-row">
+        <div>
+          <div class="group-row-label">À l'aise avec l'informatique</div>
+        </div>
+        <div class="group-row-right">
+          <label class="ios-toggle">
+            <input type="checkbox" id="tog_info">
+            <span class="ios-track"></span>
+            <span class="ios-thumb"></span>
+          </label>
+        </div>
+      </div>
+      <div class="group-row">
+        <div>
+          <div class="group-row-label">✉️ Mail confirmation + docs</div>
+        </div>
+        <div class="group-row-right">
+          <label class="ios-toggle">
+            <input type="checkbox" id="tog_mail">
+            <span class="ios-track"></span>
+            <span class="ios-thumb"></span>
+          </label>
+        </div>
+      </div>
+      <div class="group-row">
+        <div>
+          <div class="group-row-label">📞 Appel confirmation RDV</div>
+        </div>
+        <div class="group-row-right">
+          <label class="ios-toggle">
+            <input type="checkbox" id="tog_sms">
+            <span class="ios-track"></span>
+            <span class="ios-thumb"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ② MONTANTS -->
+  <div>
+    <div class="section-label">Montants (€)</div>
+    <div class="amounts-group">
+      <div class="amt-cell">
+        <label>CRD Immobilier</label>
+        <input type="number" id="crd_immo" placeholder="0" oninput="calcAll()">
+      </div>
+      <div class="amt-cell">
+        <label>CRD Consommation</label>
+        <input type="number" id="crd_conso" placeholder="0" oninput="calcAll()">
+      </div>
+      <div class="amt-cell">
+        <label>Dettes</label>
+        <input type="number" id="dettes" placeholder="0" oninput="calcAll()">
+      </div>
+      <div class="amt-cell">
+        <label>Trésorerie</label>
+        <input type="number" id="tresorerie_calc" placeholder="0" oninput="calcAll()">
+      </div>
+      <div class="amt-cell">
+        <label>Frais</label>
+        <input type="number" id="frais_calc" placeholder="0" oninput="calcAll()">
+      </div>
+      <div class="amt-cell">
+        <label>RAC existant</label>
+        <input type="number" id="rac_montant" placeholder="0" oninput="calcAll()">
+      </div>
+    </div>
+    <div style="margin-top:10px">
+      <div class="group">
+        <div class="group-row">
+          <span class="group-row-label">Type du RAC existant</span>
+          <div class="group-row-right">
+            <div class="segment" id="seg_rac">
+              <div class="seg-opt active" onclick="setSeg('seg_rac',this,'Aucun');calcAll()">Aucun</div>
+              <div class="seg-opt" onclick="setSeg('seg_rac',this,'LS2');calcAll()">LS2 ≥60%</div>
+              <div class="seg-opt" onclick="setSeg('seg_rac',this,'LCC');calcAll()">LCC &lt;60%</div>
+            </div>
+          </div>
+        </div>
+        <div class="group-row">
+          <div>
+            <div class="group-row-label">Trésorerie = Travaux</div>
+            <div class="group-row-sub">Spécifique SYGMA</div>
+          </div>
+          <div class="group-row-right">
+            <label class="ios-toggle">
+              <input type="checkbox" id="tog_treso_travaux" onchange="calcAll()">
+              <span class="ios-track"></span>
+              <span class="ios-thumb"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ③ RÉGIME LS2/LCC -->
+  <div>
+    <div class="section-label">Régime LS2 / LCC</div>
+    <div class="fin-segment" id="fin-tabs">
+      <button class="fin-btn active" onclick="selectFin(this,'CREATIS')">CREATIS</button>
+      <button class="fin-btn" onclick="selectFin(this,'CGI')">CGI</button>
+      <button class="fin-btn" onclick="selectFin(this,'CFCAL')">CFCAL</button>
+      <button class="fin-btn" onclick="selectFin(this,'MYMB')">MY MB</button>
+      <button class="fin-btn" onclick="selectFin(this,'CL')">CL</button>
+      <button class="fin-btn" onclick="selectFin(this,'SYGMA')">SYGMA</button>
+    </div>
+    <div id="regime-display"></div>
+  </div>
+
+  <!-- ④ ORIENTATION -->
+  <div>
+    <div class="section-label">Orientation</div>
+    <div class="group">
+      <div class="group-row">
+        <span class="group-row-label">Banque orientée</span>
+        <input class="inline-input" type="text" id="orient_banque" placeholder="Ex : CREATIS LS2">
+      </div>
+      <div class="group-row">
+        <span class="group-row-label">PH LCC possible</span>
+        <div class="group-row-right">
+          <label class="ios-toggle">
+            <input type="checkbox" id="tog_ph_lcc">
+            <span class="ios-track"></span>
+            <span class="ios-thumb"></span>
+          </label>
+        </div>
+      </div>
+      <div class="group-row">
+        <span class="group-row-label">PH LS2 possible</span>
+        <div class="group-row-right">
+          <label class="ios-toggle">
+            <input type="checkbox" id="tog_ph_ls2">
+            <span class="ios-track"></span>
+            <span class="ios-thumb"></span>
+          </label>
+        </div>
+      </div>
+      <div class="group-row">
+        <span class="group-row-label">Second rang</span>
+        <div class="group-row-right">
+          <label class="ios-toggle">
+            <input type="checkbox" id="tog_second_rang">
+            <span class="ios-track"></span>
+            <span class="ios-thumb"></span>
+          </label>
+        </div>
+      </div>
+      <div class="group-row">
+        <span class="group-row-label">PP possible</span>
+        <div class="group-row-right">
+          <label class="ios-toggle">
+            <input type="checkbox" id="tog_pp_poss">
+            <span class="ios-track"></span>
+            <span class="ios-thumb"></span>
+          </label>
+        </div>
+      </div>
+      <div class="group-row">
+        <span class="group-row-label">Raison si non</span>
+        <input class="inline-input" type="text" id="orient_raison" placeholder="Motif...">
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑤ TRÉSORERIE & ASSURANCE -->
+  <div>
+    <div class="section-label">Trésorerie & Assurance</div>
+    <div class="group">
+      <div class="group-row">
+        <span class="group-row-label">Montant trésorerie</span>
+        <div class="group-row-right">
+          <input class="inline-input mono" type="number" id="treso_montant" placeholder="0 €">
+        </div>
+      </div>
+      <div class="group-row">
+        <div>
+          <div class="group-row-label">Honoraires assurance RAC</div>
+          <div class="group-row-sub">Inclus dans la tréso</div>
+        </div>
+        <div class="group-row-right">
+          <input class="inline-input mono" type="number" id="treso_hono" placeholder="0 €">
+        </div>
+      </div>
+      <div class="group-row">
+        <span class="group-row-label">Orientation Ymanci</span>
+        <div class="group-row-right">
+          <div class="segment" id="seg_assu">
+            <div class="seg-opt" onclick="setSeg('seg_assu',this,'')">—</div>
+            <div class="seg-opt" onclick="setSeg('seg_assu',this,'Groupe')">Groupe</div>
+            <div class="seg-opt" onclick="setSeg('seg_assu',this,'Délégation')">Délégation</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑥ ÉQUIPEMENT -->
+  <div>
+    <div class="section-label">Équipement</div>
+    <div class="group">
+      <div class="group-row">
+        <span class="group-row-label">Obsèques — éligible</span>
+        <div class="group-row-right">
+          <label class="ios-toggle">
+            <input type="checkbox" id="tog_obseques">
+            <span class="ios-track"></span>
+            <span class="ios-thumb"></span>
+          </label>
+        </div>
+      </div>
+      <div class="group-row">
+        <span class="group-row-label">Transmission ADP</span>
+        <div class="group-row-right">
+          <label class="ios-toggle">
+            <input type="checkbox" id="tog_adp">
+            <span class="ios-track"></span>
+            <span class="ios-thumb"></span>
+          </label>
+        </div>
+      </div>
+      <div class="group-row">
+        <span class="group-row-label">Santé</span>
+        <div class="group-row-right">
+          <div class="segment" id="seg_sante">
+            <div class="seg-opt" onclick="setSeg('seg_sante',this,'')">—</div>
+            <div class="seg-opt" onclick="setSeg('seg_sante',this,'Retraité')">Retraité</div>
+            <div class="seg-opt" onclick="setSeg('seg_sante',this,'TNS')">TNS</div>
+          </div>
+        </div>
+      </div>
+      <div class="group-row">
+        <span class="group-row-label">Épargne — potentiel & leviers</span>
+        <input class="inline-input" type="text" id="epargne_notes" placeholder="Type de SEP, montant...">
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑦ PROFIL CLIENT -->
+  <div>
+    <div class="section-label">Profil client</div>
+    <div class="group">
+      <div class="group-row">
+        <span class="group-row-label">Âge du client</span>
+        <input class="inline-input" type="number" id="age_client" placeholder="ex: 45" min="18" max="99">
+      </div>
+      <div class="group-row">
+        <span class="group-row-label">Nombre d'enfants</span>
+        <input class="inline-input" type="number" id="nb_enfants" placeholder="0" min="0">
+      </div>
+      <div class="group-row">
+        <span class="group-row-label">Revenu mensuel net (€)</span>
+        <input class="inline-input" type="number" id="revenu_client" placeholder="0">
+      </div>
+      <div class="group-row">
+        <span class="group-row-label">Incident(s)</span>
+        <input class="inline-input" type="text" id="incidents" placeholder="ex: impayé 2021, fichage FICP...">
+      </div>
+      <div class="group-row">
+        <span class="group-row-label">TEAV</span>
+        <input class="inline-input" type="text" id="teav" placeholder="ex: 3.2%">
+      </div>
+      <div class="group-row">
+        <span class="group-row-label">Normes particulières détectées</span>
+        <input class="inline-input" type="text" id="normes" placeholder="ex: taux d'endettement élevé, co-emprunteur...">
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑧ PROPOSITIONS -->
+  <div>
+    <div class="section-label">Propositions</div>
+    <div class="prop-grid">
+
+      <!-- PH : 2 images -->
+      <div class="prop-card" id="prop-card-ph"
+        ondragover="event.preventDefault();this.classList.add('drag-over')"
+        ondragleave="this.classList.remove('drag-over')"
+        ondrop="event.preventDefault();this.classList.remove('drag-over');dropProp('ph',event)">
+        <div class="prop-card-head">
+          <span>PH + SEP</span>
+          <button class="del-prop" onclick="event.stopPropagation();clearProp('ph')">✕</button>
+        </div>
+        <div class="prop-drop" id="drop_ph" onclick="document.getElementById('img_ph').click()">
+          <span class="drop-icon">📄</span>
+          <span>Appuyer ou glisser une image</span>
+          <span style="font-size:11px;color:var(--muted);font-weight:400">Jusqu'à 2 images — PH + SEP</span>
+        </div>
+        <textarea class="paste-zone" id="paste_ph" placeholder="📋 Cliquer ici puis Ctrl+V pour coller une image" readonly></textarea>
+        <div id="preview_ph" style="display:none">
+          <div id="ph_imgs_wrap"></div>
+          <div class="prop-add-more" onclick="document.getElementById('img_ph2').click()" id="ph_add_more" style="display:none">
+            <span>＋ Ajouter une 2ème image</span>
+          </div>
+        </div>
+        <input type="file" id="img_ph" accept="image/*" style="display:none" onchange="loadPropFile('ph',this,0)">
+        <input type="file" id="img_ph2" accept="image/*" style="display:none" onchange="loadPropFile('ph',this,1)">
+      </div>
+
+      <!-- PP : 1 image -->
+      <div class="prop-card" id="prop-card-pp"
+        ondragover="event.preventDefault();this.classList.add('drag-over')"
+        ondragleave="this.classList.remove('drag-over')"
+        ondrop="event.preventDefault();this.classList.remove('drag-over');dropProp('pp',event)">
+        <div class="prop-card-head">
+          <span>PP + SEP</span>
+          <button class="del-prop" onclick="event.stopPropagation();clearProp('pp')">✕</button>
+        </div>
+        <div class="prop-drop" id="drop_pp" onclick="document.getElementById('img_pp').click()">
+          <span class="drop-icon">📄</span>
+          <span>Appuyer ou glisser une image</span>
+          <span style="font-size:11px;color:var(--muted);font-weight:400">Proposition PP + SEP</span>
+        </div>
+        <textarea class="paste-zone" id="paste_pp" placeholder="📋 Cliquer ici puis Ctrl+V pour coller une image" readonly></textarea>
+        <div class="prop-preview" id="preview_pp">
+          <img id="img_preview_pp" src="" alt="PP SEP">
+        </div>
+        <input type="file" id="img_pp" accept="image/*" style="display:none" onchange="loadPropFile('pp',this,0)">
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ⑨ DOCUMENTS -->
+  <div>
+    <div class="section-label">Documents reçus — cliquer pour cocher</div>
+    <div class="doc-chips" id="doc-chips"></div>
+    <div class="doc-add-row">
+      <input type="text" id="new-doc-input" placeholder="Ajouter un document..." onkeydown="if(event.key==='Enter')addDoc()">
+      <button class="add-btn" onclick="addDoc()">Ajouter</button>
+    </div>
+  </div>
+
+  <!-- ⑩ IMAGES -->
+  <div>
+    <div class="section-label">Images à joindre au PDF</div>
+    <div class="img-drop"
+      onclick="document.getElementById('img-input').click()"
+      ondragover="event.preventDefault();this.classList.add('drag-over')"
+      ondragleave="this.classList.remove('drag-over')"
+      ondrop="event.preventDefault();this.classList.remove('drag-over');handleDropImgs(event)">
+      <span class="drop-icon">📎</span>
+      Appuyer ou glisser-déposer des images
+      <input type="file" id="img-input" accept="image/*" multiple style="display:none" onchange="addImages(this)">
+    </div>
+    <div class="img-grid" id="img-grid"></div>
+  </div>
+
+</div>
+
+
+
+<script>
+// ── STATE ──
+let imgs = [], docs = [], activeFin = 'CREATIS';
+const segVals = {};
+
+const DEFAULT_DOCS = [
+  'CNI / Passeport', 'Justificatif domicile', '3 bulletins de salaire',
+  '3 relevés de compte', 'Tableau amortissement', "Avis imposition N-1 et N-2",
+  'Compromis / titre propriété', 'RIB'
+];
+
+window.onload = () => {
+  DEFAULT_DOCS.forEach(d => addDocItem(d, false));
+  selectFin(document.querySelector('.fin-btn'), 'CREATIS');
+  document.getElementById('date_rdv').valueAsDate = new Date();
+  // init segment vals
+  segVals['seg_rac'] = 'Aucun';
+  segVals['seg_assu'] = '';
+  segVals['seg_sante'] = '';
+};
+
+// ── TOGGLE helpers ──
+function tog(id) { return document.getElementById(id)?.checked || false; }
+function togLabel(id) { return tog(id) ? 'Oui' : 'Non'; }
+
+// ── SEGMENT ──
+function setSeg(groupId, el, val) {
+  segVals[groupId] = val;
+  el.closest('.segment').querySelectorAll('.seg-opt').forEach(o => o.classList.remove('active'));
+  el.classList.add('active');
+}
+function getSeg(groupId) { return segVals[groupId] || ''; }
+
+// ── CLIENT BADGE ──
+function updateBadge() {
+  const v = document.getElementById('nom_client').value.trim();
+  document.getElementById('top-client').textContent = v || '— Client —';
+}
+
+// ── NUMBERS ──
+function n(id) { return parseFloat(document.getElementById(id)?.value) || 0; }
+function v(id) { return document.getElementById(id)?.value?.trim() || ''; }
+function fmt(x) {
+  return new Intl.NumberFormat('fr-FR', {style:'currency', currency:'EUR', maximumFractionDigits:0}).format(x||0);
+}
+
+// ── CALCUL ──
+function getCalc(fin) {
+  let immo = n('crd_immo'), conso = n('crd_conso');
+  const dettes = n('dettes'), treso = n('tresorerie_calc'), frais = n('frais_calc');
+  const racMt = n('rac_montant'), racType = getSeg('seg_rac');
+  const tresoTravaux = tog('tog_treso_travaux');
+
+  if (racMt > 0 && racType && racType !== 'Aucun') {
+    if (fin === 'MYMB') { if (racType === 'LS2') immo += racMt; else conso += racMt; }
+    else { if (racType === 'LCC') conso += racMt; else immo += racMt; }
+  }
+
+  let denom = immo + conso + dettes, note = '', warns = [];
+
+  switch(fin) {
+    case 'CREATIS': denom += treso + frais; note = 'Inclut trésorerie + frais.'; if (racMt && racType==='LCC') warns.push('RAC LCC → comptabilisé en conso'); break;
+    case 'CGI':     denom += treso;         note = 'Inclut trésorerie. Frais exclus.'; if (racMt && racType==='LCC') warns.push('RAC LCC → comptabilisé en conso'); break;
+    case 'CFCAL':                           note = 'Hors trésorerie, frais et prêts pro.'; if (racMt && racType==='LCC') warns.push('RAC LCC → comptabilisé en conso'); break;
+    case 'MYMB':                            note = 'Hors trésorerie, frais et prêts pro.'; warns.push('RAC : taux appliqué ? LS2→immo / LCC→conso'); break;
+    case 'CL':      denom += treso + frais; note = 'Inclut trésorerie + frais.'; if (racMt && racType==='LCC') warns.push('RAC LCC → comptabilisé en conso'); break;
+    case 'SYGMA':
+      denom += (tresoTravaux ? 0 : treso) + frais;
+      note = tresoTravaux ? 'Tréso travaux déduite du financement, hors part immo.' : 'Inclut trésorerie + frais.';
+      warns.push('Si RAC LS2 : banque distingue part immo / conso');
+      if (tresoTravaux) warns.push('Tréso travaux exclue de la part immobilière');
+      break;
+  }
+
+  const ratio = denom > 0 ? (immo / denom) * 100 : 0;
+  return { ratio, regime: ratio >= 60 ? 'LS2' : 'LCC', note, warns, immo, denom };
+}
+
+function selectFin(el, name) {
+  activeFin = name;
+  document.querySelectorAll('.fin-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderRegime();
+}
+
+function renderRegime() {
+  const { ratio, regime, note, warns, immo, denom } = getCalc(activeFin);
+  const isLS2 = regime === 'LS2';
+  const cl = isLS2 ? 'ls2' : 'lcc';
+  document.getElementById('regime-display').innerHTML =
+    '<div class="regime-banner ' + cl + '">' +
+      '<div class="regime-big">' + regime + '</div>' +
+      '<div class="regime-details">' +
+        '<div class="regime-pct">' + ratio.toFixed(1) + '% immobilier</div>' +
+        '<div class="regime-meta">' + fmt(immo) + ' / ' + fmt(denom) + '</div>' +
+        '<div class="regime-bar"><div class="regime-bar-fill" style="width:' + Math.min(ratio,100) + '%"></div></div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="regime-note"><strong>' + activeFin + '</strong> — ' + note +
+      (warns.length ? '<br>' + warns.map(w => '⚠ ' + w).join('<br>') : '') +
+    '</div>';
+}
+
+function calcAll() { renderRegime(); }
+
+// ── IMAGES ──
+function addImages(input) {
+  Array.from(input.files).forEach(f => {
+    const r = new FileReader();
+    r.onload = e => { imgs.push({id: Date.now()+Math.random(), src: e.target.result}); renderImgs(); };
+    r.readAsDataURL(f);
+  });
+  input.value = '';
+}
+
+function renderImgs() {
+  document.getElementById('img-grid').innerHTML = imgs.map(img =>
+    '<div class="img-thumb">' +
+      '<img src="' + img.src + '">' +
+      '<button class="del" onclick="removeImg(' + img.id + ')">✕</button>' +
+    '</div>'
+  ).join('');
+}
+
+function removeImg(id) { imgs = imgs.filter(i => i.id !== id); renderImgs(); }
+
+// ── DOCS ──
+function addDocItem(label, checked) {
+  const id = 'doc_' + Date.now() + Math.random();
+  docs.push({id, label, checked: !!checked});
+  renderDocs();
+}
+
+function addDoc() {
+  const inp = document.getElementById('new-doc-input');
+  if (!inp.value.trim()) return;
+  addDocItem(inp.value.trim(), false);
+  inp.value = '';
+}
+
+function toggleDoc(id) {
+  const d = docs.find(x => x.id === id);
+  if (d) d.checked = !d.checked;
+  renderDocs();
+}
+
+function removeDoc(id) { docs = docs.filter(d => d.id !== id); renderDocs(); }
+
+function renderDocs() {
+  document.getElementById('doc-chips').innerHTML = docs.map(d =>
+    '<div class="doc-chip ' + (d.checked ? 'got' : '') + '" onclick="toggleDoc(\'' + d.id + '\')">' +
+      '<span class="chip-icon">' + (d.checked ? '✓' : '') + '</span>' +
+      d.label +
+      '<button class="xbtn" onclick="event.stopPropagation();removeDoc(\'' + d.id + '\')">×</button>' +
+    '</div>'
+  ).join('');
+}
+
+// ── RESET ──
+function resetAll() {
+  if (!confirm('Effacer toutes les données ?')) return;
+  document.querySelectorAll('input[type=text],input[type=number],input[type=date]').forEach(e => e.value = '');
+  document.querySelectorAll('input[type=checkbox]').forEach(e => e.checked = false);
+  // clear prop images
+  clearProp('ph'); clearProp('pp');
+  // reset segments
+  document.querySelectorAll('.segment .seg-opt').forEach(o => o.classList.remove('active'));
+  document.querySelectorAll('.segment .seg-opt:first-child').forEach(o => o.classList.add('active'));
+  segVals['seg_rac'] = 'Aucun'; segVals['seg_assu'] = ''; segVals['seg_sante'] = '';
+  imgs = []; docs = [];
+  renderImgs();
+  DEFAULT_DOCS.forEach(d => addDocItem(d, false));
+  document.getElementById('date_rdv').valueAsDate = new Date();
+  updateBadge(); calcAll();
+}
+
+// ── PROPOSITION IMAGES ──
+// ph can hold 2 images, pp holds 1
+const propImgs = { ph: [null, null], pp: [null] };
+
+function readFileAsDataURL(file) {
+  return new Promise(res => {
+    const r = new FileReader();
+    r.onload = e => res(e.target.result);
+    r.readAsDataURL(file);
+  });
+}
+
+async function loadPropFile(key, input, slot) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = '';
+  const src = await readFileAsDataURL(file);
+  propImgs[key][slot] = src;
+  renderPropPreviews(key);
+}
+
+async function dropProp(key, event) {
+  const files = Array.from(event.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+  if (!files.length) return;
+  if (key === 'pp') {
+    propImgs['pp'][0] = await readFileAsDataURL(files[0]);
+  } else {
+    // ph: fill slots in order
+    for (let i = 0; i < Math.min(files.length, 2); i++) {
+      propImgs['ph'][i] = await readFileAsDataURL(files[i]);
+    }
+  }
+  renderPropPreviews(key);
+}
+
+function removePropImg(key, slot) {
+  propImgs[key][slot] = null;
+  // compact: if slot 0 removed but slot 1 exists, shift
+  if (key === 'ph' && slot === 0 && propImgs.ph[1]) {
+    propImgs.ph[0] = propImgs.ph[1];
+    propImgs.ph[1] = null;
+  }
+  renderPropPreviews(key);
+}
+
+function clearProp(key) {
+  if (key === 'ph') propImgs.ph = [null, null];
+  else propImgs.pp = [null];
+  renderPropPreviews(key);
+}
+
+function renderPropPreviews(key) {
+  if (key === 'ph') {
+    const imgs = propImgs.ph;
+    const hasAny = imgs[0] || imgs[1];
+    document.getElementById('drop_ph').style.display = hasAny ? 'none' : '';
+    const previewEl = document.getElementById('preview_ph');
+    previewEl.style.display = hasAny ? 'block' : 'none';
+    const wrap = document.getElementById('ph_imgs_wrap');
+    wrap.innerHTML = imgs
+      .map((src, i) => src ?
+        '<div style="position:relative">' +
+          '<img src="' + src + '" style="width:100%;display:block;object-fit:contain;max-height:340px;background:#f8f8f8;">' +
+          '<button onclick="removePropImg(\'ph\',' + i + ')" style="position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.55);border:none;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)">✕</button>' +
+          (i === 0 && imgs[1] ? '<div style="height:.5px;background:rgba(60,60,67,.12)"></div>' : '') +
+        '</div>'
+        : ''
+      ).join('');
+    // show "+ ajouter 2ème image" only if slot 0 filled and slot 1 empty
+    const addMore = document.getElementById('ph_add_more');
+    addMore.style.display = (imgs[0] && !imgs[1]) ? 'block' : 'none';
+  } else {
+    const src = propImgs.pp[0];
+    document.getElementById('drop_pp').style.display = src ? 'none' : '';
+    const previewEl = document.getElementById('preview_pp');
+    previewEl.style.display = src ? 'block' : 'none';
+    const imgEl = document.getElementById('img_preview_pp');
+    if (imgEl) imgEl.src = src || '';
+  }
+}
+
+function handleDropImgs(event) {
+  const files = Array.from(event.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+  files.forEach(f => {
+    const r = new FileReader();
+    r.onload = e => { imgs.push({id: Date.now()+Math.random(), src: e.target.result}); renderImgs(); };
+    r.readAsDataURL(f);
+  });
+}
+
+// ── PDF CONTENT ──
+function prow(label, val) {
+  if (!val) return '';
+  return '<div class="pdf-row"><span>' + label + '</span><span>' + val + '</span></div>';
+}
+
+async function doPrint() {
+  var btn = document.querySelector('.nav-btn-blue');
+  if (btn) { btn.textContent = '...'; btn.disabled = true; }
+  try {
+    var jsPDF = window.jspdf.jsPDF;
+    var pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+    var cal = getCalc(activeFin);
+    var pzR = cal.ratio, pzReg = cal.regime, pzLS2 = pzReg === 'LS2';
+    var pzDocs = docs.filter(function(d){ return d.checked; }).length;
+
+    var PW = 210, PH = 297, ML = 12, MR = 12, MT = 14;
+    var CW = (PW - ML - MR - 8) / 2;
+    var x1 = ML, x2 = ML + CW + 8;
+    var y1 = MT, y2 = MT;
+    var LH = 5.5, SH = 4;
+
+    function ss(s) {
+      var m = {'\u00e9':'e','\u00e8':'e','\u00ea':'e','\u00eb':'e','\u00e0':'a','\u00e2':'a','\u00e4':'a','\u00f4':'o','\u00f9':'u','\u00fb':'u','\u00fc':'u','\u00ee':'i','\u00ef':'i','\u00e7':'c','\u00c9':'E','\u00c8':'E','\u00c0':'A','\u00c7':'C','\u2014':'-','\u2013':'-','\u2019':"'",'\u2713':'v','\u2717':'x','\u2705':'OK','\u25a1':'[ ]','\u00a0':' ','\u202f':' ','\u2009':' ','\u00b7':'.'};
+      return (s||'').replace(/[^\x00-\x7E]/g,function(c){return m[c]!==undefined?m[c]:' ';});
+    }
+
+    function row(x, y, label, val) {
+      if (!val) return y;
+      pdf.setFont('helvetica','normal'); pdf.setFontSize(8); pdf.setTextColor(100,100,110);
+      pdf.text(ss(label), x, y);
+      pdf.setFont('helvetica','bold'); pdf.setTextColor(28,28,30);
+      pdf.text(ss(val), x+CW, y, {align:'right', maxWidth:CW-1});
+      pdf.setDrawColor(238,238,242); pdf.setLineWidth(0.15);
+      pdf.line(x, y+1.2, x+CW, y+1.2);
+      return y + LH;
+    }
+
+    function sec(x, y, title) {
+      y += 3;
+      pdf.setFont('helvetica','bold'); pdf.setFontSize(6.5); pdf.setTextColor(160,160,165);
+      pdf.text(ss(title).toUpperCase(), x, y);
+      pdf.setDrawColor(210,210,215); pdf.setLineWidth(0.3);
+      pdf.line(x, y+1.8, x+CW, y+1.8);
+      return y + SH;
+    }
+
+    // Header
+    pdf.setFont('helvetica','bold'); pdf.setFontSize(18); pdf.setTextColor(28,28,30);
+    pdf.text(ss(v('nom_client')||'Client'), ML, MT);
+    pdf.setFont('helvetica','normal'); pdf.setFontSize(8); pdf.setTextColor(140,140,147);
+    pdf.text('RDV ' + ss(v('date_rdv')||'-') + '  |  ' + activeFin + '  |  ' + new Date().toLocaleDateString('fr-FR'), ML, MT+6);
+    y1 = MT + 13; y2 = MT + 13;
+
+    // COL GAUCHE
+    y1 = sec(x1,y1,'Profil client');
+    y1 = row(x1,y1,'Age', v('age_client') ? v('age_client') + ' ans' : '');
+    y1 = row(x1,y1,'Enfants', v('nb_enfants') ? v('nb_enfants') : '');
+    y1 = row(x1,y1,'Revenu net', n('revenu_client') ? ss(fmt(n('revenu_client'))) + '/mois' : '');
+    y1 = row(x1,y1,'Incident(s)', v('incidents'));
+    y1 = row(x1,y1,'TEAV', v('teav'));
+    y1 = row(x1,y1,'Normes detectees', v('normes'));
+
+    y1 = sec(x1,y1,'Contact');
+    y1 = row(x1,y1,'Informatique', tog('tog_info')?'Oui':'Non');
+    y1 = row(x1,y1,'Mail envoye', tog('tog_mail')?'v Oui':'x Non');
+    y1 = row(x1,y1,'Appel confirmation', tog('tog_sms')?'v Oui':'x Non');
+
+    y1 = sec(x1,y1,'Calcul - ' + activeFin);
+    y1 = row(x1,y1,'CRD Immobilier', ss(fmt(n('crd_immo'))));
+    y1 = row(x1,y1,'CRD Consommation', ss(fmt(n('crd_conso'))));
+    if(n('dettes')) y1 = row(x1,y1,'Dettes', ss(fmt(n('dettes'))));
+    if(n('tresorerie_calc')) y1 = row(x1,y1,'Tresorerie', ss(fmt(n('tresorerie_calc'))));
+    if(n('frais_calc')) y1 = row(x1,y1,'Frais', ss(fmt(n('frais_calc'))));
+    y1 = row(x1,y1,'Regime', pzReg + ' - ' + pzR.toFixed(1) + '%');
+
+    y1 = sec(x1,y1,'Orientation');
+    if(v('orient_banque')) y1 = row(x1,y1,'Banque', v('orient_banque'));
+    y1 = row(x1,y1,'PH LCC', togLabel('tog_ph_lcc'));
+    y1 = row(x1,y1,'PH LS2', togLabel('tog_ph_ls2'));
+    y1 = row(x1,y1,'Second rang', togLabel('tog_second_rang'));
+    y1 = row(x1,y1,'PP possible', togLabel('tog_pp_poss'));
+    if(v('orient_raison')) y1 = row(x1,y1,'Motif', v('orient_raison'));
+
+    // COL DROITE
+    y2 = sec(x2,y2,'Tresorerie & Assurance');
+    if(n('treso_montant')) y2 = row(x2,y2,'Montant treo', ss(fmt(n('treso_montant'))));
+    if(n('treso_hono')) y2 = row(x2,y2,'Hono assurance RAC', ss(fmt(n('treso_hono'))));
+    if(getSeg('seg_assu')) y2 = row(x2,y2,'Ymanci', getSeg('seg_assu'));
+
+    y2 = sec(x2,y2,'Equipement');
+    y2 = row(x2,y2,'Obseques', tog('tog_obseques')?'Eligible':'Non');
+    y2 = row(x2,y2,'ADP', togLabel('tog_adp'));
+    if(getSeg('seg_sante')) y2 = row(x2,y2,'Sante', getSeg('seg_sante'));
+    if(v('epargne_notes')) y2 = row(x2,y2,'SEP', v('epargne_notes'));
+
+    var docsManquants = docs.filter(function(d){ return !d.checked; });
+    if (docsManquants.length) {
+      y2 = sec(x2,y2,'Documents a demander (' + docsManquants.length + ')');
+      docsManquants.forEach(function(d){ y2 = row(x2,y2,ss(d.label), 'A demander'); });
+    } else {
+      y2 = sec(x2,y2,'Documents');
+      y2 = row(x2,y2,'Tous les documents', 'recus');
+    }
+
+    // IMAGES - une par page
+    var allImgs = propImgs.ph.filter(Boolean).concat(propImgs.pp[0]?[propImgs.pp[0]]:[]);
+    var imgLabels = ['PH + SEP','PH + SEP (2)','PP + SEP'];
+    for(var i=0;i<allImgs.length;i++){
+      var src = allImgs[i];
+      var imgEl = new Image();
+      await new Promise(function(res){ imgEl.onload=res; imgEl.onerror=res; imgEl.src=src; });
+      if(!imgEl.naturalWidth) continue;
+      pdf.addPage();
+      pdf.setFont('helvetica','bold'); pdf.setFontSize(8); pdf.setTextColor(140,140,147);
+      pdf.text((imgLabels[i]||'Image').toUpperCase(), ML, MT);
+      pdf.setDrawColor(210,210,215); pdf.setLineWidth(0.3);
+      pdf.line(ML, MT+2, PW-MR, MT+2);
+      var iw = PW-ML-MR;
+      var ih = Math.min((imgEl.naturalHeight/imgEl.naturalWidth)*iw, PH-MT-16);
+      pdf.addImage(src, src.indexOf('image/png')>-1?'PNG':'JPEG', ML, MT+6, iw, ih);
+    }
+
+    var nom = ss(v('nom_client')||'client').replace(/\s+/g,'_');
+    var date = (v('date_rdv')||'').replace(/-/g,'');
+    pdf.save('PrepRDV_'+nom+'_'+date+'.pdf');
+
+  } catch(e) { alert('Erreur : '+e.message); console.error(e); }
+  finally { if(btn){ btn.textContent='↓ PDF'; btn.disabled=false; } }
+}
+
+
+// ── PASTE ZONE ──
+async function handlePasteZone(event, key) {
+  var items = Array.from(event.clipboardData.items);
+  var imgItem = items.find(function(i) { return i.type.startsWith('image/'); });
+  if (!imgItem) return;
+  event.preventDefault();
+  var file = imgItem.getAsFile();
+  if (!file) return;
+  var src = await readFileAsDataURL(file);
+  if (key === 'ph') {
+    var slot = propImgs.ph[0] === null ? 0 : 1;
+    propImgs.ph[slot] = src;
+    renderPropPreviews('ph');
+  } else {
+    propImgs.pp[0] = src;
+    renderPropPreviews('pp');
+  }
+}
+
+document.getElementById('paste_ph').addEventListener('paste', function(e) { handlePasteZone(e, 'ph'); });
+document.getElementById('paste_pp').addEventListener('paste', function(e) { handlePasteZone(e, 'pp'); });
+
+['paste_ph', 'paste_pp'].forEach(function(id) {
+  var el = document.getElementById(id);
+  el.addEventListener('click', function(e) {
+    e.stopPropagation();
+    el.removeAttribute('readonly');
+    el.focus();
+  });
+  el.addEventListener('blur', function() { el.setAttribute('readonly', ''); });
+});
+
+// ── HONO → Auto Délégation ──
+document.getElementById('treso_hono').addEventListener('input', function() {
+  var val = parseFloat(this.value) || 0;
+  var seg = document.getElementById('seg_assu');
+  seg.querySelectorAll('.seg-opt').forEach(function(o) { o.classList.remove('active'); });
+  if (val > 0) {
+    var delegOpt = Array.from(seg.querySelectorAll('.seg-opt')).find(function(o) { return o.textContent.trim() === 'Délégation'; });
+    if (delegOpt) { delegOpt.classList.add('active'); segVals['seg_assu'] = 'Délégation'; }
+  } else {
+    var firstOpt = seg.querySelector('.seg-opt');
+    if (firstOpt) { firstOpt.classList.add('active'); segVals['seg_assu'] = ''; }
+  }
+});
+</script>
+
+</body>
+</html>
