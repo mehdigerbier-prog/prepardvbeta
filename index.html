@@ -220,6 +220,7 @@ body {
 .inline-input.mono { font-variant-numeric: tabular-nums; font-size: 15px; font-weight: 500; }
 
 input[type=date].inline-input { max-width: 160px; }
+select.inline-input { cursor: pointer; max-width: 260px; }
 
 /* ── SEGMENT CONTROL ── */
 .segment {
@@ -683,9 +684,7 @@ input[type=date].inline-input { max-width: 160px; }
         </div>
       </div>
       <div class="group-row">
-        <div>
-          <div class="group-row-label">À l'aise avec l'informatique</div>
-        </div>
+        <span class="group-row-label">À l'aise avec l'informatique</span>
         <div class="group-row-right">
           <label class="ios-toggle">
             <input type="checkbox" id="tog_info">
@@ -713,6 +712,18 @@ input[type=date].inline-input { max-width: 160px; }
         <div class="group-row-right">
           <label class="ios-toggle">
             <input type="checkbox" id="tog_sms">
+            <span class="ios-track"></span>
+            <span class="ios-thumb"></span>
+          </label>
+        </div>
+      </div>
+      <div class="group-row">
+        <div>
+          <div class="group-row-label">📱 Client eu au téléphone</div>
+        </div>
+        <div class="group-row-right">
+          <label class="ios-toggle">
+            <input type="checkbox" id="tog_tel_client">
             <span class="ios-track"></span>
             <span class="ios-thumb"></span>
           </label>
@@ -799,7 +810,14 @@ input[type=date].inline-input { max-width: 160px; }
     <div class="group">
       <div class="group-row">
         <span class="group-row-label">Banque orientée</span>
-        <input class="inline-input" type="text" id="orient_banque" placeholder="Ex : CREATIS LS2">
+        <div class="group-row-right" style="display:flex;gap:8px;align-items:center">
+          <div class="segment" id="seg_orient_type">
+            <div class="seg-opt active" onclick="setSeg('seg_orient_type',this,'LS2')">LS2</div>
+            <div class="seg-opt" onclick="setSeg('seg_orient_type',this,'LCC')">LCC</div>
+            <div class="seg-opt" onclick="setSeg('seg_orient_type',this,'PP')">PP</div>
+          </div>
+          <input class="inline-input" type="text" id="orient_banque" placeholder="Ex : CREATIS" style="width:110px">
+        </div>
       </div>
       <div class="group-row">
         <span class="group-row-label">PH LCC possible</span>
@@ -853,9 +871,25 @@ input[type=date].inline-input { max-width: 160px; }
     <div class="section-label">Trésorerie & Assurance</div>
     <div class="group">
       <div class="group-row">
+        <span class="group-row-label">Motif trésorerie</span>
+        <input class="inline-input" type="text" id="treso_motif" placeholder="ex: travaux, rachat, liquidités...">
+      </div>
+      <div class="group-row">
         <span class="group-row-label">Montant trésorerie</span>
         <div class="group-row-right">
           <input class="inline-input mono" type="number" id="treso_montant" placeholder="0 €">
+        </div>
+      </div>
+      <div class="group-row">
+        <div>
+          <div class="group-row-label">Délégation d'assurance incluse</div>
+        </div>
+        <div class="group-row-right">
+          <label class="ios-toggle">
+            <input type="checkbox" id="tog_delegation">
+            <span class="ios-track"></span>
+            <span class="ios-thumb"></span>
+          </label>
         </div>
       </div>
       <div class="group-row">
@@ -865,6 +899,15 @@ input[type=date].inline-input { max-width: 160px; }
         </div>
         <div class="group-row-right">
           <input class="inline-input mono" type="number" id="treso_hono" placeholder="0 €">
+        </div>
+      </div>
+      <div class="group-row">
+        <span class="group-row-label">Honoraires</span>
+        <div class="group-row-right">
+          <div class="segment" id="seg_honoraires">
+            <div class="seg-opt active" onclick="setSeg('seg_honoraires',this,'Client seul')">Client seul</div>
+            <div class="seg-opt" onclick="setSeg('seg_honoraires',this,'Couple')">Couple</div>
+          </div>
         </div>
       </div>
       <div class="group-row">
@@ -915,7 +958,10 @@ input[type=date].inline-input { max-width: 160px; }
         </div>
       </div>
       <div class="group-row">
-        <span class="group-row-label">Épargne — potentiel & leviers</span>
+        <div>
+          <div class="group-row-label">Épargne — potentiel & leviers</div>
+          <div class="group-row-sub">SEP : éligible si &lt; 72 ans</div>
+        </div>
         <input class="inline-input" type="text" id="epargne_notes" placeholder="Type de SEP, montant...">
       </div>
     </div>
@@ -947,7 +993,22 @@ input[type=date].inline-input { max-width: 160px; }
       </div>
       <div class="group-row">
         <span class="group-row-label">Normes particulières détectées</span>
-        <input class="inline-input" type="text" id="normes" placeholder="ex: taux d'endettement élevé, co-emprunteur...">
+        <div class="group-row-right">
+          <select class="inline-input" id="normes_select" onchange="document.getElementById('normes_autre_row').style.display=this.value==='Autre'?'flex':'none'">
+            <option value="">— Sélectionner —</option>
+            <option>Taux d'endettement élevé</option>
+            <option>Co-emprunteur requis</option>
+            <option>Reste à vivre insuffisant</option>
+            <option>Durée maximale atteinte</option>
+            <option>Fichage FICP / FCC</option>
+            <option>Aucune</option>
+            <option>Autre</option>
+          </select>
+        </div>
+      </div>
+      <div class="group-row" id="normes_autre_row" style="display:none">
+        <span class="group-row-label">Préciser</span>
+        <input class="inline-input" type="text" id="normes" placeholder="Autre norme détectée...">
       </div>
     </div>
   </div>
@@ -1042,8 +1103,8 @@ const segVals = {};
 
 const DEFAULT_DOCS = [
   'CNI / Passeport', 'Justificatif domicile', '3 bulletins de salaire',
-  '3 relevés de compte', 'Tableau amortissement', "Avis imposition N-1 et N-2",
-  'Compromis / titre propriété', 'RIB'
+  'BS décembre (dernier)', 'Avis imposition (dernier)', '3 relevés de compte',
+  'Tableau amortissement', 'Taxe foncière (TF)', 'Compromis / titre propriété', 'RIB'
 ];
 
 window.onload = () => {
@@ -1054,6 +1115,8 @@ window.onload = () => {
   segVals['seg_rac'] = 'Aucun';
   segVals['seg_assu'] = '';
   segVals['seg_sante'] = '';
+  segVals['seg_honoraires'] = 'Client seul';
+  segVals['seg_orient_type'] = 'LS2';
 };
 
 // ── TOGGLE helpers ──
@@ -1357,17 +1420,20 @@ async function doPrint() {
 
     // COL GAUCHE
     y1 = sec(x1,y1,'Profil client');
+    y1 = row(x1,y1,'Honoraires', getSeg('seg_honoraires'));
     y1 = row(x1,y1,'Age', v('age_client') ? v('age_client') + ' ans' : '');
-    y1 = row(x1,y1,'Enfants', v('nb_enfants') ? v('nb_enfants') : '');
+    y1 = row(x1,y1,'Enfants', v('nb_enfants') !== '' ? v('nb_enfants') : '');
     y1 = row(x1,y1,'Revenu net', n('revenu_client') ? ss(fmt(n('revenu_client'))) + '/mois' : '');
     y1 = row(x1,y1,'Incident(s)', v('incidents'));
     y1 = row(x1,y1,'TEAV', v('teav'));
-    y1 = row(x1,y1,'Normes detectees', v('normes'));
+    var normesVal = (function(){ var s = document.getElementById('normes_select'); var sel = s ? s.value : ''; return sel === 'Autre' ? (v('normes')||'') : sel; })();
+    y1 = row(x1,y1,'Normes detectees', normesVal);
 
     y1 = sec(x1,y1,'Contact');
     y1 = row(x1,y1,'Informatique', tog('tog_info')?'Oui':'Non');
     y1 = row(x1,y1,'Mail envoye', tog('tog_mail')?'v Oui':'x Non');
     y1 = row(x1,y1,'Appel confirmation', tog('tog_sms')?'v Oui':'x Non');
+    y1 = row(x1,y1,'Client eu au tel', tog('tog_tel_client')?'v Oui':'x Non');
 
     y1 = sec(x1,y1,'Calcul - ' + activeFin);
     y1 = row(x1,y1,'CRD Immobilier', ss(fmt(n('crd_immo'))));
@@ -1378,7 +1444,7 @@ async function doPrint() {
     y1 = row(x1,y1,'Regime', pzReg + ' - ' + pzR.toFixed(1) + '%');
 
     y1 = sec(x1,y1,'Orientation');
-    if(v('orient_banque')) y1 = row(x1,y1,'Banque', v('orient_banque'));
+    if(v('orient_banque')) y1 = row(x1,y1,'Banque', (getSeg('seg_orient_type')?getSeg('seg_orient_type')+' - ':'') + v('orient_banque'));
     y1 = row(x1,y1,'PH LCC', togLabel('tog_ph_lcc'));
     y1 = row(x1,y1,'PH LS2', togLabel('tog_ph_ls2'));
     y1 = row(x1,y1,'Second rang', togLabel('tog_second_rang'));
@@ -1387,7 +1453,9 @@ async function doPrint() {
 
     // COL DROITE
     y2 = sec(x2,y2,'Tresorerie & Assurance');
-    if(n('treso_montant')) y2 = row(x2,y2,'Montant treo', ss(fmt(n('treso_montant'))));
+    if(v('treso_motif')) y2 = row(x2,y2,'Motif', ss(v('treso_motif')));
+    if(n('treso_montant')) y2 = row(x2,y2,'Montant', ss(fmt(n('treso_montant'))));
+    y2 = row(x2,y2,'Delegation assurance', tog('tog_delegation')?'Oui':'Non');
     if(n('treso_hono')) y2 = row(x2,y2,'Hono assurance RAC', ss(fmt(n('treso_hono'))));
     if(getSeg('seg_assu')) y2 = row(x2,y2,'Ymanci', getSeg('seg_assu'));
 
